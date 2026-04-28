@@ -12,7 +12,7 @@ Check out how these cards look in action:
   <img src="https://github-profile-metrics-two.vercel.app/api/stats" height="200" alt="Stats Card" />
   <img src="https://github-profile-metrics-two.vercel.app/api/streak" height="200" alt="Streak Card" />
   <br/>
-  <img src="https://github-profile-metrics-two.vercel.app/api/langs" width="450" alt="Langs Card" />
+  <img src="https://github-profile-metrics-two.vercel.app/api/langs" height="200" alt="Langs Card" />
 </p>
 
 ---
