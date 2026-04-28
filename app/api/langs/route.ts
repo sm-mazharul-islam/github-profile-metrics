@@ -51,18 +51,19 @@ export async function GET() {
 
     const svg = `
     <svg width="450" height="230" viewBox="0 0 450 230" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="410" height="190" x="20" y="20" rx="15" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" />
-      <text x="40" y="55" font-family="Segoe UI" fill="#1DB954" font-size="20" font-weight="bold">Top Tech</text>
-      <g transform="translate(40, 90)">
+      <rect width="410" height="190" x="20" y="20" rx="20" fill="rgba(255, 255, 255, 0.03)" stroke="rgba(0, 225, 255, 0.1)" />
+      <text x="45" y="60" font-family="Segoe UI" fill="#00E5FF" font-size="20" font-weight="bold">Most Used Languages</text>
+      <g transform="translate(45, 95)">
         ${sorted
           .map(([n, d], i) => {
-            const w = (d.size / total) * 220;
+            const w = (d.size / total) * 230;
             return `
           <g transform="translate(0, ${i * 35})">
-            <text font-family="Segoe UI" fill="#C9D1D9" font-size="13">${n}</text>
-            <rect x="120" y="-12" width="220" height="6" rx="3" fill="rgba(255,255,255,0.05)" />
-            <rect x="120" y="-12" width="0" height="6" rx="3" fill="${d.color}">
+            <text font-family="Segoe UI" fill="#C9D1D9" font-size="14">${n}</text>
+            <rect x="110" y="-12" width="230" height="8" rx="4" fill="rgba(255,255,255,0.05)" />
+            <rect x="110" y="-12" width="0" height="8" rx="4" fill="#00E5FF">
               <animate attributeName="width" from="0" to="${w}" dur="1.5s" fill="freeze" />
+              <animate attributeName="fill" values="#00E5FF;#00B8D4;#00E5FF" dur="3s" repeatCount="indefinite" />
             </rect>
           </g>`;
           })

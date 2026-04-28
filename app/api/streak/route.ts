@@ -32,55 +32,124 @@ export async function GET() {
       },
       body: JSON.stringify({ query }),
     });
+
     const result: GithubStreakResponse = await res.json();
     const days =
       result.data.user.contributionsCollection.contributionCalendar.weeks
         .flatMap((w) => w.contributionDays)
-        .reverse();
+        .reverse(); // Latest day first
 
-    let current = 0,
-      longest = 0,
-      temp = 0;
+    let current = 0;
+    let longest = 0;
+    let tempStreak = 0;
+    let currStart = "";
+    let currEnd = "";
+    let longStart = "";
+    let longEnd = "";
+    let tempEnd = "";
+
+    // Calculate current and longest streaks
     days.forEach((d, i) => {
       if (d.contributionCount > 0) {
-        temp++;
-        if (i === 0) current = temp;
-        if (temp > longest) longest = temp;
+        if (tempStreak === 0) tempEnd = d.date;
+        tempStreak++;
+
+        if (tempStreak >= longest) {
+          longest = tempStreak;
+          longEnd = tempEnd;
+          longStart = d.date;
+        }
+
+        // Check if streak is still active from today or yesterday
+        if (i === 0 || (i === 1 && days[0].contributionCount === 0)) {
+          // This indicates an ongoing streak
+        }
       } else {
-        temp = 0;
+        // Break temp streak if it's not today/yesterday gap
+        if (i > 1) tempStreak = 0;
       }
     });
 
+    // Dedicated loop for active current streak to get dates accurately
+    let count = 0;
+    let foundActive = false;
+    // Check if user contributed today or yesterday to consider it "active"
+    const isRecentlyActive =
+      days[0].contributionCount > 0 || days[1].contributionCount > 0;
+
+    if (isRecentlyActive) {
+      for (const d of days) {
+        if (d.contributionCount > 0) {
+          if (!foundActive) {
+            currEnd = d.date;
+            foundActive = true;
+          }
+          count++;
+          currStart = d.date;
+        } else if (foundActive) {
+          break;
+        }
+      }
+      current = count;
+    }
+
+    const formatDate = (dateStr: string) => {
+      if (!dateStr) return "---";
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    };
+
     const svg = `
     <svg width="450" height="230" viewBox="0 0 450 230" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="innerGlow" x="0" y="0" width="200%" height="200%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
-        </filter>
-      </defs>
-
-      <rect width="410" height="190" x="20" y="20" rx="15" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" />
+      <style>
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes fillUp { from { stroke-dashoffset: 301; } to { stroke-dashoffset: var(--offset); } }
+        .flame { animation: pulse 2s infinite ease-in-out; fill: #00E5FF; filter: drop-shadow(0 0 8px #00E5FF); }
+        .date-text { fill: #8B949E; font-family: 'Segoe UI', sans-serif; font-size: 11px; }
+        .draw-circle { 
+          animation: fillUp 2s ease-out forwards; 
+          stroke-dasharray: 301; 
+          --offset: ${301 - Math.min(current, 30) * 10};
+        }
+      </style>
       
-      <g transform="translate(110, 115)">
-        <circle r="45" stroke="rgba(255,255,255,0.05)" stroke-width="5" fill="none" />
-        <circle r="45" stroke="#1DB954" stroke-width="5" fill="none" stroke-dasharray="283" stroke-dashoffset="${283 - current * 8}" stroke-linecap="round" transform="rotate(-90)">
-          <animate attributeName="stroke-dashoffset" from="283" to="${283 - current * 8}" dur="2s" fill="freeze" />
-        </circle>
-        <text dy="10" text-anchor="middle" font-family="Segoe UI" fill="#fff" font-size="28" font-weight="bold">${current}</text>
-        <text y="70" text-anchor="middle" font-family="Segoe UI" fill="#1DB954" font-size="12" font-weight="bold">Current Streak</text>
+      <rect width="410" height="190" x="20" y="20" rx="20" fill="rgba(255, 255, 255, 0.03)" stroke="rgba(0, 225, 255, 0.1)" />
+      
+      <g transform="translate(120, 115)">
+        <circle r="48" stroke="rgba(0, 229, 255, 0.1)" stroke-width="6" fill="none" />
+        <circle r="48" stroke="#00E5FF" stroke-width="6" fill="none" class="draw-circle" stroke-linecap="round" transform="rotate(-90)" />
+        
+        <path class="flame" d="M0 -30 C -10 -20, -15 -10, -15 0 C -15 10, -8 18, 0 18 C 8 18, 15 10, 15 0 C 15 -15, 0 -35, 0 -35 Z" transform="translate(0, -55) scale(0.4)" />
+        
+        <text dy="10" text-anchor="middle" font-family="Segoe UI" fill="#fff" font-size="32" font-weight="bold">${current}</text>
+        <text y="70" text-anchor="middle" font-family="Segoe UI" fill="#00E5FF" font-size="13" font-weight="bold">Current Streak</text>
+        <text y="88" text-anchor="middle" class="date-text">${formatDate(currStart)} - ${formatDate(currEnd)}</text>
       </g>
 
-      <line x1="225" y1="50" x2="225" y2="180" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+      <line x1="230" y1="60" x2="230" y2="170" stroke="rgba(0, 229, 255, 0.15)" stroke-width="1.5" />
 
-      <g transform="translate(340, 115)">
-        <text dy="10" text-anchor="middle" font-family="Segoe UI" fill="#1DB954" font-size="36" font-weight="bold">${longest}</text>
-        <text y="45" text-anchor="middle" font-family="Segoe UI" fill="#1DB954" font-size="12" font-weight="bold">Longest Streak</text>
+      <g transform="translate(335, 115)">
+        <text dy="10" text-anchor="middle" font-family="Segoe UI" fill="#00E5FF" font-size="36" font-weight="bold" style="filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.3));">${longest}</text>
+        <text y="40" text-anchor="middle" font-family="Segoe UI" fill="#fff" font-size="13" font-weight="bold">Longest Streak</text>
+        <text y="60" text-anchor="middle" class="date-text">${formatDate(longStart)} - ${formatDate(longEnd)}</text>
       </g>
     </svg>`;
+
     return new NextResponse(svg, {
-      headers: { "Content-Type": "image/svg+xml" },
+      headers: {
+        "Content-Type": "image/svg+xml",
+        "Cache-Control": "no-store, max-age=0",
+      },
     });
   } catch {
-    return new NextResponse("<svg></svg>");
+    return new NextResponse(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="450" height="230"><text y="20" fill="red">Error loading streak data</text></svg>',
+      {
+        headers: { "Content-Type": "image/svg+xml" },
+      },
+    );
   }
 }
