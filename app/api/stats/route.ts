@@ -72,9 +72,23 @@ export async function GET() {
       <text x="370" y="125" text-anchor="middle" fill="#00E5FF" font-family="Arial" font-weight="bold" font-size="22">A+</text>
     </svg>`;
     return new NextResponse(svg, {
-      headers: { "Content-Type": "image/svg+xml" },
+      headers: {
+        "Content-Type": "image/svg+xml",
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
     });
-  } catch {
-    return new NextResponse("<svg></svg>");
+  } catch (error) {
+    return new NextResponse(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="450" height="230"><rect width="410" height="190" x="20" y="20" rx="20" fill="rgba(255,255,255,0.03)" stroke="#00E5FF" stroke-opacity="0.2"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#8B949E">Stats currently unavailable</text></svg>`,
+      {
+        headers: {
+          "Content-Type": "image/svg+xml",
+          "Cache-Control": "no-store",
+        },
+      },
+    );
   }
 }
