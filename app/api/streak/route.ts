@@ -138,17 +138,24 @@ export async function GET() {
       </g>
     </svg>`;
 
+    // ... existing logic ...
     return new NextResponse(svg, {
       headers: {
         "Content-Type": "image/svg+xml",
-        "Cache-Control": "no-store, max-age=0",
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
-  } catch {
+  } catch (error) {
     return new NextResponse(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="450" height="230"><text y="20" fill="red">Error loading streak data</text></svg>',
+      `<svg xmlns="http://www.w3.org/2000/svg" width="450" height="230"><rect width="410" height="190" x="20" y="20" rx="20" fill="rgba(255,255,255,0.03)" stroke="#00E5FF" stroke-opacity="0.2"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#8B949E">Streak data unavailable</text></svg>`,
       {
-        headers: { "Content-Type": "image/svg+xml" },
+        headers: {
+          "Content-Type": "image/svg+xml",
+          "Cache-Control": "no-store",
+        },
       },
     );
   }
